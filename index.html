@@ -5,18 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Repository Search</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>GitHub Repository Search</h1>
+        <h1>GitHub Search</h1>
+        <div class="token-container">
+            <label for="tokenInput">Token:</label>
+            <input type="password" id="tokenInput" placeholder="ghp_seu_token">
+            <button id="saveToken">Salvar</button>
+            <button id="deleteToken" class="delete-button">Apagar Token</button>
+        </div>
+        <div class="search-options">
+            <button class="tab-button active" data-type="repositories">Repositórios</button>
+            <button class="tab-button" data-type="users">Usuários/Organizações</button>
+        </div>
         <form id="search-form">
-            <input type="text" id="search-input" placeholder="Buscar repositórios..." required>
+            <input type="text" id="search-input" placeholder="Digite sua busca..." required>
             <button type="submit">Pesquisar</button>
         </form>
+        <div id="rate-limit-info" class="rate-limit hidden">Requisições restantes: --</div>
         <div id="loading" class="hidden">Carregando...</div>
         <div id="error" class="hidden"></div>
+        
+        <div id="user-profile" class="hidden">
+            <div class="profile-header"></div>
+            <div class="stats-container">
+                <div class="stats-box">
+                    <canvas id="languagesChart"></canvas>
+                </div>
+                <div class="stats-box">
+                    <h3>Estatísticas Gerais</h3>
+                    <div id="general-stats"></div>
+                </div>
+            </div>
+        </div>
+
         <div id="results" class="repository-grid"></div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
