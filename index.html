@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Repository Search</h1>
+        <form id="search-form">
+            <input type="text" id="search-input" placeholder="Buscar repositórios..." required>
+            <button type="submit">Pesquisar</button>
+        </form>
+        <div id="loading" class="hidden">Carregando...</div>
+        <div id="error" class="hidden"></div>
+        <div id="results" class="repository-grid"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
