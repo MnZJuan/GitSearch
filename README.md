@@ -72,6 +72,12 @@ A aplicação utiliza a API do GitHub para buscar repositórios e usuários. Qua
 GET https://api.github.com/search/repositories?q={termo_busca}
 ```
 
+#### Usuários
+```
+GET https://api.github.com/users/{username}
+GET https://api.github.com/users/{username}/repos
+```
+
 ### Estrutura do projeto
 
 ```
@@ -79,8 +85,23 @@ GitSearch/
 ├── index.html      # Estrutura da página
 ├── styles.css      # Estilos da aplicação
 ├── script.js       # Lógica de busca e exibição
-└── README.md       # Documentação do projeto
+├── README.md       # Documentação do projeto
+└── imagens/        # Imagens de teste
 ```
+
+## 🖼️ Imagens de teste
+
+### Tela inicial
+![Tela inicial](imagens/tela_inicial.png)
+
+### Busca de repositórios
+![Busca de repositórios](imagens/busca_repositorios.png)
+
+### Busca de usuários
+![Busca de usuários](imagens/busca_usuarios.png)
+
+### Exibição de requisições restantes com API
+![Estatísticas de linguagens](imagens/requisicoes_restantes.png)
 
 ## 📝 Limitações
 
