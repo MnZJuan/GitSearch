@@ -28,50 +28,6 @@ document.getElementById('deleteToken').addEventListener('click', () => {
     alert('Token apagado com sucesso!');
 });
 
-// Recuperar o token do backend ao carregar a página
-async function fetchTokenFromBackend() {
-    try {
-        const response = await fetch('http://localhost:3000/api/token');
-        if (!response.ok) {
-            throw new Error('Erro ao carregar o token do backend.');
-        }
-        const data = await response.json();
-        githubToken = data.token;
-        console.log('Token carregado do backend:', githubToken);
-
-        // Fechar o modal automaticamente se o token já estiver carregado
-        if (githubToken) {
-            closeTokenModal();
-            enableApplication(); // Habilitar a aplicação para fazer requisições
-        } else {
-            // Mostrar o modal se o token não estiver configurado
-            document.getElementById('tokenModal').classList.remove('hidden');
-        }
-    } catch (error) {
-        console.error('Erro ao carregar o token do backend:', error);
-        document.getElementById('tokenModal').classList.remove('hidden'); // Mostrar o modal em caso de erro
-    }
-}
-
-// Salvar o token no backend
-async function saveTokenToBackend(token) {
-    try {
-        const response = await fetch('http://localhost:3000/api/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-        });
-        if (!response.ok) {
-            throw new Error('Erro ao salvar o token no backend.');
-        }
-        const data = await response.json();
-        console.log(data.message);
-    } catch (error) {
-        console.error('Erro ao salvar o token no backend:', error);
-        throw error;
-    }
-}
-
 // Gerenciamento das tabs
 document.querySelectorAll('.tab-button').forEach(button => {
     button.addEventListener('click', (e) => {
@@ -115,60 +71,6 @@ document.getElementById('search-form').addEventListener('submit', async (e) => {
     }
 });
 
-// Configuração do modal de token
-document.getElementById('configButton').addEventListener('click', () => {
-    const tokenInput = document.getElementById('tokenInput');
-    tokenInput.value = githubToken || '';
-    document.getElementById('tokenModal').classList.remove('hidden');
-});
-
-document.getElementById('closeModal').addEventListener('click', closeTokenModal);
-
-document.getElementById('saveToken').addEventListener('click', async () => {
-    const tokenInput = document.getElementById('tokenInput');
-    const token = tokenInput.value.trim();
-    if (token) {
-        try {
-            await saveTokenToBackend(token); // Salvar no backend
-            githubToken = token; // Atualizar o token localmente
-            localStorage.setItem('githubToken', token);
-            console.log('Token salvo no localStorage:', githubToken);
-            showFeedback();
-            closeTokenModal(); // Fechar o modal após salvar
-            enableApplication(); // Habilitar a aplicação para fazer requisições
-        } catch (error) {
-            console.error('Erro ao salvar o token:', error);
-            alert('Erro ao salvar o token. Verifique o console para mais detalhes.');
-        }
-    } else {
-        tokenInput.style.borderColor = '#f85149';
-        setTimeout(() => {
-            tokenInput.style.borderColor = '#30363d';
-        }, 2000);
-    }
-});
-
-function closeTokenModal() {
-    const modal = document.getElementById('tokenModal');
-    modal.classList.add('hidden');
-    document.getElementById('tokenInput').value = '';
-}
-
-function enableApplication() {
-    // Habilitar a aplicação para fazer requisições
-    document.getElementById('search-form').classList.remove('hidden');
-    document.getElementById('results').classList.remove('hidden');
-    console.log('Aplicação habilitada para fazer requisições.');
-}
-
-function showFeedback() {
-    const button = document.getElementById('configButton');
-    button.textContent = '✓';
-    setTimeout(() => {
-        button.textContent = '⚙️';
-    }, 2000);
-}
-
 // Atualizar a função githubFetch para capturar o número de requisições restantes
 async function githubFetch(url) {
     try {
@@ -193,13 +95,7 @@ async function githubFetch(url) {
         if (response.status === 403) {
             const resetTime = new Date(response.headers.get('X-RateLimit-Reset') * 1000);
             const minutes = Math.ceil((resetTime - new Date()) / (1000 * 60));
-            const remaining = response.headers.get('X-RateLimit-Remaining');
-            
-            console.log(`Limite de requisições: ${remaining} restantes`);
-            
-            if (remaining === '0') {
-                throw new Error(`Limite de requisições atingido. Tente novamente em ${minutes} minutos ou insira um token válido na área indicada.`);
-            }
+            throw new Error(`Limite de requisições atingido. Tente novamente em ${minutes} minutos ou insira um token válido na área indicada.`);
         }
 
         if (!response.ok) {
@@ -216,52 +112,23 @@ async function githubFetch(url) {
 // Atualizar a função searchUser para tratar falhas
 async function searchUser(query) {
     try {
-        // Primeiro tenta buscar como usuário direto
-        try {
-            const userData = await githubFetch(`https://api.github.com/users/${query}`);
-            const reposData = await githubFetch(`https://api.github.com/users/${query}/repos?per_page=100&sort=updated`);
-            
-            displayUserProfile(userData);
-            displayUserStats(reposData);
-            
-            const reposWithCommits = await Promise.all(reposData.map(async repo => {
-                try {
-                    const lastCommit = await getLastCommit(query, repo.name);
-                    return { ...repo, lastCommit };
-                } catch (error) {
-                    console.warn(`Erro ao buscar commit para ${repo.name}:`, error);
-                    return { ...repo, lastCommit: null };
-                }
-            }));
-
-            displayRepositories(reposWithCommits);
-        } catch (error) {
-            // Se falhar, tenta buscar usando a API de busca
-            const searchData = await githubFetch(`https://api.github.com/search/users?q=${encodeURIComponent(query)}`);
-            
-            if (searchData.items.length === 0) {
-                throw new Error('Nenhum usuário encontrado');
+        const userData = await githubFetch(`https://api.github.com/users/${query}`);
+        const reposData = await githubFetch(`https://api.github.com/users/${query}/repos?per_page=100&sort=updated`);
+        
+        displayUserProfile(userData);
+        displayUserStats(reposData);
+        
+        const reposWithCommits = await Promise.all(reposData.map(async repo => {
+            try {
+                const lastCommit = await getLastCommit(query, repo.name);
+                return { ...repo, lastCommit };
+            } catch (error) {
+                console.warn(`Erro ao buscar commit para ${repo.name}:`, error);
+                return { ...repo, lastCommit: null };
             }
+        }));
 
-            const username = searchData.items[0].login;
-            const userData = await githubFetch(`https://api.github.com/users/${username}`);
-            const reposData = await githubFetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`);
-
-            displayUserProfile(userData);
-            displayUserStats(reposData);
-            
-            const reposWithCommits = await Promise.all(reposData.map(async repo => {
-                try {
-                    const lastCommit = await getLastCommit(username, repo.name);
-                    return { ...repo, lastCommit };
-                } catch (error) {
-                    console.warn(`Erro ao buscar commit para ${repo.name}:`, error);
-                    return { ...repo, lastCommit: null };
-                }
-            }));
-
-            displayRepositories(reposWithCommits);
-        }
+        displayRepositories(reposWithCommits);
     } catch (error) {
         console.error('Erro na busca de usuário:', error);
         throw new Error('Usuário não encontrado. Verifique o termo de busca ou insira um token válido.');
@@ -437,25 +304,3 @@ async function searchRepositories(query) {
         errorDiv.classList.remove('hidden');
     }
 }
-
-// Adicionar função de utilidade para lidar com limites de taxa
-function checkRateLimit(response) {
-    const remaining = response.headers.get('X-RateLimit-Remaining');
-    if (remaining && parseInt(remaining) === 0) {
-        const resetTime = new Date(response.headers.get('X-RateLimit-Reset') * 1000);
-        throw new Error(`Limite de requisições atingido. Tente novamente após ${resetTime.toLocaleTimeString()}`);
-    }
-}
-
-function showError(message) {
-    const error = document.getElementById('error');
-    error.textContent = message;
-    error.classList.remove('hidden');
-}
-
-function hideError() {
-    document.getElementById('error').classList.add('hidden');
-}
-
-// Carregar o token ao iniciar
-fetchTokenFromBackend();
